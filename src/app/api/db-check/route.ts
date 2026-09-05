@@ -3,14 +3,23 @@ import { db } from "@/lib/db";
 
 export async function GET() {
   try {
-    const tables = await db.$queryRawUnsafe(
-      `SELECT name FROM sqlite_master WHERE type='table' ORDER BY name`
-    );
+    // دقیقاً همان کوئری که /api/rg اجرا می‌کند
+    const globalAgg = await db.rgFile.aggregate({
+      where: { deletedAt: null },
+      _sum: { size: true },
+      _count: { _all: true },
+    });
+
     return NextResponse.json({
-      databaseUrl: process.env.DATABASE_URL?.substring(0, 40) + "...",
-      tables: (tables as any[]).map((r: any) => r.name),
+      success: true,
+      usedBytes: globalAgg._sum.size ?? 0,
+      fileCount: globalAgg._count._all,
     });
   } catch (e: any) {
-    return NextResponse.json({ error: e.message }, { status: 500 });
+    return NextResponse.json({
+      success: false,
+      error: e.message,
+      stack: e.stack?.substring(0, 500),
+    }, { status: 500 });
   }
 }
