@@ -80,10 +80,9 @@ export function CreateEditGroupDialog({
       }
       return api.post(`/api/groups`, payload);
     },
-    onSuccess: () => {
+        onSuccess: () => {
       toast.success(isEdit ? "گروه ویرایش شد" : "گروه ساخته شد");
-      queryClient.invalidateQueries({ queryKey: ["groups"] });
-      queryClient.invalidateQueries({ queryKey: ["groups", "list"] });
+      queryClient.invalidateQueries({ queryKey: ["groups"], exact: false });
       if (editGroup) {
         queryClient.invalidateQueries({ queryKey: ["group", editGroup.id] });
       }
