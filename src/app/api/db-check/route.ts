@@ -1,25 +1,17 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { getRgConfig, evaluateGlobalUsage, measureDatabase, measurePerUserUsage, measureUploadsDir, maybePruneRgEvents } from "@/lib/resource-guard";
+import { backupsSummary } from "@/lib/rg-backup";
 
 export async function GET() {
-  try {
-    // دقیقاً همان کوئری که /api/rg اجرا می‌کند
-    const globalAgg = await db.rgFile.aggregate({
-      where: { deletedAt: null },
-      _sum: { size: true },
-      _count: { _all: true },
-    });
+  const results: Record<string, string> = {};
 
-    return NextResponse.json({
-      success: true,
-      usedBytes: globalAgg._sum.size ?? 0,
-      fileCount: globalAgg._count._all,
-    });
-  } catch (e: any) {
-    return NextResponse.json({
-      success: false,
-      error: e.message,
-      stack: e.stack?.substring(0, 500),
-    }, { status: 500 });
-  }
+  try { await getRgConfig(); results["getRgConfig"] = "OK"; } catch (e: any) { results["getRgConfig"] = e.message; }
+  try { await evaluateGlobalUsage(); results["evaluateGlobalUsage"] = "OK"; } catch (e: any) { results["evaluateGlobalUsage"] = e.message; }
+  try { await measureUploadsDir(); results["measureUploadsDir"] = "OK"; } catch (e: any) { results["measureUploadsDir"] = e.message; }
+  try { await measureDatabase(); results["measureDatabase"] = "OK"; } catch (e: any) { results["measureDatabase"] = e.message; }
+  try { const cfg = await getRgConfig(); await measurePerUserUsage(cfg); results["measurePerUserUsage"] = "OK"; } catch (e: any) { results["measurePerUserUsage"] = e.message; }
+  try { await backupsSummary(); results["backupsSummary"] = "OK"; } catch (e: any) { results["backupsSummary"] = e.message; }
+
+  return NextResponse.json(results);
 }
