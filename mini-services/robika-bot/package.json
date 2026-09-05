@@ -1,0 +1,16 @@
+{
+  "name": "sibak-robika-bot",
+  "version": "2.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "bun --hot index.ts",
+    "start": "bun index.ts"
+  },
+  "comments": [
+    "ربات روبیکا سیبک — سرویس مستقل پروداکشن (Render).",
+    "منطق ربات فقط در src/lib/rubika-bot.ts است و این wrapper همان را import می‌کند — بدون وابستگی خارجی.",
+    "اجرا: bun install (فقط اولین بار برای lockfile) و سپس bun run start",
+    "Health check روی GET /health (پورت PORT یا پیش‌فرض 3004)."
+  ]
+}

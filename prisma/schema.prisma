@@ -1,0 +1,574 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================
+// سیبک — بستر همکاری درسی
+// Roles: ADMIN (ادمین) | MANAGER (مدیر) | MEMBER (کاربر) | GUEST (مهمان)
+// Status: PENDING (در انتظار تایید) | ACTIVE | SUSPENDED | REJECTED
+// GUEST: عضو مهمان با انقضای زمانی یا محدوده پروژه (guestExpiresAt / guestScope)
+// Soft delete everywhere (deletedAt) برای پرونده ادمین
+// ============================================================
+
+model User {
+  id            String    @id @default(cuid())
+  name          String
+  username      String    @unique
+  email         String?   // این فیلد دیگر استفاده نمی‌شود — ورود/ثبت‌نام فقط با نام کاربری است
+  password      String
+  role          String    @default("MEMBER")
+  status        String    @default("PENDING")
+  joinReason    String?
+  skills        String?
+  bio           String?
+  avatar        String?
+  points        Int       @default(0)
+  rejectionNote String?
+  guestExpiresAt DateTime? // فقط برای نقش GUEST: تاریخ انقضای عضویت مهمان
+  guestScope     String?   // فقط برای نقش GUEST: محدوده پروژه/زمان توضیحی
+  lastLoginAt   DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  deletedAt     DateTime?
+
+  groupMemberships GroupMember[]
+  groupsLed        Group[]        @relation("GroupLeader")
+  ideas            Idea[]
+  ideaVotes        IdeaVote[]
+  comments         Comment[]
+  events           CalendarEvent[]
+  polls            Poll[]        @relation("PollCreator")
+  vetoTargetPolls  Poll[]        @relation("VetoTarget")
+  pollVotes        PollVote[]
+  debtsOwed        Debt[]        @relation("Debtor")
+  debtsHeld        Debt[]        @relation("Creditor")
+  debtsCreated     Debt[]        @relation("DebtCreator")
+  debtEvents       DebtEvent[]
+  debtVisibilities DebtVisibility[]
+  vetoLedger       VetoLedger[]
+  announcements    Announcement[]
+  notifications    Notification[]
+  auditLogs        AuditLog[]
+  pointLogs        PointLog[]
+  badges           UserBadge[]
+  medals           UserMedal[]
+  medalsCreated    Medal[]     @relation("MedalCreator")
+  medalsAwarded    UserMedal[] @relation("MedalAwarder")
+  submissions         Submission[]
+  submissionsReviewed Submission[] @relation("SubmissionReviewer")
+  teacherGroups       TeacherGroup[]
+  teacherContents TeacherContent[]
+  supportsRegistered  Support[]      @relation("SupportRegistrar")
+  chatRooms           ChatRoomMember[]
+  chatMessages        ChatMessage[]
+  chatRoomsCreated    ChatRoom[]     @relation("ChatRoomCreator")
+  rgFiles             RgFile[]       @relation("RgFileOwner")
+}
+model TeacherContent {
+  id          String   @id @default(cuid())
+  title       String
+  subject     String
+  description String?
+  fileUrl     String?
+  fileName    String?
+  filePath    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  teacherId   String
+  groupId     String
+  
+  teacher     User   @relation(fields: [teacherId], references: [id])
+  group       Group  @relation(fields: [groupId], references: [id], onDelete: Cascade)
+}
+
+// ---------- زیرمجموعه‌ها ----------
+
+model Group {
+  id          String    @id @default(cuid())
+  name        String
+  slug        String    @unique
+  description String?
+  color       String    @default("emerald")
+  icon        String    @default("users")
+  joinPolicy  String    @default("REQUEST") // OPEN | REQUEST | INVITE
+  leaderId    String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+
+  leader           User?             @relation("GroupLeader", fields: [leaderId], references: [id])
+  members          GroupMember[]
+  ideas            Idea[]
+  events           CalendarEvent[]
+  polls            Poll[]
+  announcements    Announcement[]
+  submissions      Submission[]
+  teacherGroups    TeacherGroup[]
+  teacherContents  TeacherContent[]
+}
+
+model GroupMember {
+  id        String   @id @default(cuid())
+  groupId   String
+  userId    String
+  status    String   @default("PENDING") // PENDING | ACTIVE | REJECTED
+  joinedAt  DateTime @default(now())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  group Group @relation(fields: [groupId], references: [id])
+  user  User  @relation(fields: [userId], references: [id])
+
+  @@unique([groupId, userId])
+}
+// ---------- ارسال تکالیف دانش‌آموزان ----------
+
+model Submission {
+  id           String    @id @default(cuid())
+  studentId    String
+  groupId      String
+  title        String
+  description  String?
+  status       String    @default("PENDING") // PENDING | REVIEWED | NEEDS_REVISION
+  reviewedAt   DateTime?
+  reviewedById String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  student   User             @relation(fields: [studentId], references: [id])
+  group     Group            @relation(fields: [groupId], references: [id])
+  reviewedBy User?           @relation("SubmissionReviewer", fields: [reviewedById], references: [id])
+  files     SubmissionFile[]
+}
+
+model SubmissionFile {
+  id           String   @id @default(cuid())
+  submissionId String
+  fileName     String
+  fileUrl      String
+  fileSize     Int
+  mimeType     String
+  createdAt    DateTime @default(now())
+
+  submission Submission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+}
+
+model TeacherGroup {
+  id        String   @id @default(cuid())
+  teacherId String
+  groupId   String
+  createdAt DateTime @default(now())
+
+  teacher User  @relation(fields: [teacherId], references: [id])
+  group   Group @relation(fields: [groupId], references: [id])
+
+  @@unique([teacherId, groupId])
+}
+
+// ---------- ایده‌ها ----------
+
+model Idea {
+  id          String    @id @default(cuid())
+  title       String
+  description String
+  status      String    @default("PENDING") // PENDING | APPROVED | IN_PROGRESS | DONE | REJECTED
+  authorId    String
+  groupId     String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+
+  author   User       @relation(fields: [authorId], references: [id])
+  group    Group?     @relation(fields: [groupId], references: [id])
+  votes    IdeaVote[]
+  // کامنت‌ها polymorphic هستند و از طریق Comment(entityType: "IDEA", entityId) جستجو می‌شوند
+}
+
+model IdeaVote {
+  id        String   @id @default(cuid())
+  ideaId    String
+  userId    String
+  value     Int      @default(1)
+  createdAt DateTime @default(now())
+
+  idea Idea @relation(fields: [ideaId], references: [id])
+  user User @relation(fields: [userId], references: [id])
+
+  @@unique([ideaId, userId])
+}
+
+// ---------- کامنت‌های چند-موجودیتی ----------
+
+model Comment {
+  id         String    @id @default(cuid())
+  entityType String // IDEA | POLL | GROUP | ANNOUNCEMENT | DEBT
+  entityId   String
+  authorId   String
+  body       String
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  deletedAt  DateTime?
+
+  author User @relation(fields: [authorId], references: [id])
+}
+
+// ---------- تقویم ----------
+
+model CalendarEvent {
+  id          String    @id @default(cuid())
+  title       String
+  description String?
+  type        String    @default("GENERAL") // GENERAL | EXAM | HOMEWORK | MEETING | HOLIDAY | PROJECT
+  date        DateTime
+  endDate     DateTime?
+  groupId     String?
+  createdById String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+
+  group     Group? @relation(fields: [groupId], references: [id])
+  createdBy User   @relation(fields: [createdById], references: [id])
+}
+
+// ---------- نظرسنجی + وتو ----------
+
+model Poll {
+  id           String    @id @default(cuid())
+  title        String
+  description  String?
+  type         String    @default("NORMAL") // NORMAL | VETO_GRANT
+  targetUserId String? // برای نظرسنجی اعطای وتو
+  vetoAmount   Int? // تعداد وتویی که با اکثریت اعطا می‌شود
+  status       String    @default("OPEN") // OPEN | CLOSED | VETOED
+  isAnonymous  Boolean   @default(false)
+  closesAt     DateTime?
+  createdById  String
+  groupId      String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  deletedAt    DateTime?
+
+  targetUser User?        @relation("VetoTarget", fields: [targetUserId], references: [id])
+  createdBy  User         @relation("PollCreator", fields: [createdById], references: [id])
+  group      Group?       @relation(fields: [groupId], references: [id])
+  options    PollOption[]
+  votes      PollVote[]
+}
+
+model PollOption {
+  id     String @id @default(cuid())
+  pollId String
+  text   String
+
+  poll  Poll        @relation(fields: [pollId], references: [id])
+  votes PollVote[]
+}
+
+model PollVote {
+  id        String   @id @default(cuid())
+  pollId    String
+  optionId  String
+  userId    String
+  createdAt DateTime @default(now())
+
+  poll   Poll       @relation(fields: [pollId], references: [id])
+  option PollOption @relation(fields: [optionId], references: [id])
+  user   User       @relation(fields: [userId], references: [id])
+
+  @@unique([pollId, userId])
+}
+
+// ---------- دفتر وتو ----------
+
+model VetoLedger {
+  id           String   @id @default(cuid())
+  userId       String
+  delta        Int // + اعطا / - استفاده
+  reason       String
+  sourcePollId String?
+  balanceAfter Int
+  createdAt    DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+// ---------- بدهکاری مودبانه ----------
+
+model Debt {
+  id          String    @id @default(cuid())
+  debtorId    String // بدهکار
+  creditorId  String // طلبکار
+  title       String
+  projectName String?
+  description String?
+  amount      Int // امتیاز بدهی
+  status      String    @default("OPEN") // OPEN | SETTLE_PENDING | SETTLED | FORGIVEN | DISPUTED
+  visibility  String    @default("PUBLIC") // PUBLIC | RESTRICTED | PRIVATE
+  dueDate     DateTime?
+  createdById String
+  settledAt   DateTime?
+  forgivenAt  DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+
+  debtor       User             @relation("Debtor", fields: [debtorId], references: [id])
+  creditor     User             @relation("Creditor", fields: [creditorId], references: [id])
+  createdBy    User             @relation("DebtCreator", fields: [createdById], references: [id])
+  events       DebtEvent[]
+  allowedUsers DebtVisibility[]
+}
+
+model DebtEvent {
+  id        String   @id @default(cuid())
+  debtId    String
+  actorId   String
+  type      String // CREATE | SETTLE_REQUEST | SETTLE_CONFIRM | FORGIVE | REOPEN | ADJUST | COMMENT
+  note      String?
+  createdAt DateTime @default(now())
+
+  debt  Debt @relation(fields: [debtId], references: [id])
+  actor User @relation(fields: [actorId], references: [id])
+}
+
+model DebtVisibility {
+  id     String @id @default(cuid())
+  debtId String
+  userId String
+
+  debt Debt @relation(fields: [debtId], references: [id])
+  user User @relation(fields: [userId], references: [id])
+}
+
+// ---------- پیام همگانی ----------
+
+model Announcement {
+  id          String    @id @default(cuid())
+  title       String
+  body        String
+  level       String    @default("INFO") // INFO | SUCCESS | WARNING | URGENT
+  pinned      Boolean   @default(false)
+  audience    String    @default("ALL") // ALL | GROUP
+  groupId     String?
+  createdById String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+
+  createdBy User  @relation(fields: [createdById], references: [id])
+  group     Group? @relation(fields: [groupId], references: [id])
+}
+
+// ---------- اعلان‌ها ----------
+
+model Notification {
+  id        String    @id @default(cuid())
+  userId    String
+  title     String
+  message   String
+  type      String    @default("INFO") // INFO | SUCCESS | WARNING | DEBT | VETO | POLL | GROUP | IDEA | USER
+  link      String? // مسیر هش برای رفتن
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+// ---------- لاگ ممیزی (پرونده ادمین) ----------
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  actorId    String?
+  action     String // مثلاً USER_APPROVE, IDEA_DELETE, SETTING_UPDATE ...
+  entityType String
+  entityId   String?
+  summary    String
+  data       String? // JSON snapshot
+  createdAt  DateTime @default(now())
+
+  actor User? @relation(fields: [actorId], references: [id])
+}
+
+model PointLog {
+  id        String   @id @default(cuid())
+  userId    String
+  delta     Int
+  reason    String
+  actorId   String?
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+// ---------- نشان‌ها ----------
+
+model Badge {
+  id          String       @id @default(cuid())
+  key         String       @unique
+  name        String
+  description String
+  icon        String // emoji
+  color       String       @default("emerald")
+  users       UserBadge[]
+}
+
+model UserBadge {
+  id          String   @id @default(cuid())
+  userId      String
+  badgeId     String
+  awardedAt   DateTime @default(now())
+  awardedById String?
+
+  user  User  @relation(fields: [userId], references: [id])
+  badge Badge @relation(fields: [badgeId], references: [id])
+}
+
+// ---------- مدال‌ها ----------
+
+model Medal {
+  id          String    @id @default(cuid())
+  name        String
+  description String
+  imageUrl    String // data URL — PNG شفاف (بدون پس‌زمینه)
+  rarity      String    @default("COMMON") // COMMON | RARE | EPIC | LEGENDARY
+  points      Int       @default(0) // امتیازی که با اعطای مدال به دارنده اضافه می‌شود
+  maxCount    Int? // سقف تعداد دارنده‌ها — null = نامحدود
+  createdById String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+
+  createdBy User        @relation("MedalCreator", fields: [createdById], references: [id])
+  holders   UserMedal[]
+}
+
+model UserMedal {
+  id          String   @id @default(cuid())
+  userId      String
+  medalId     String
+  awardedAt   DateTime @default(now())
+  awardedById String?
+
+  user      User  @relation(fields: [userId], references: [id])
+  medal     Medal @relation(fields: [medalId], references: [id], onDelete: Cascade)
+  awardedBy User? @relation("MedalAwarder", fields: [awardedById], references: [id])
+
+  @@unique([userId, medalId])
+}
+
+// ---------- حمایت از سیبک ----------
+
+model Support {
+  id             String    @id @default(cuid())
+  name           String // نام حامی (پیش‌فرض: نام کاربر اعلام‌کننده)
+  amount         Int? // مبلغ واریزی (تومان) — اختیاری
+  message        String? // پیام حامی
+  status         String    @default("PENDING") // PENDING (اعلام شده) | REGISTERED (ثبت شد) | REJECTED
+  isPublic       Boolean   @default(false) // رضایت فرد برای نمایش نام در فهرست حامیان
+  userId         String? // کاربر اعلام‌کننده (اگر واردشده باشد)
+  registeredAt   DateTime?
+  registeredById String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  deletedAt      DateTime?
+
+  registeredBy User? @relation("SupportRegistrar", fields: [registeredById], references: [id])
+}
+
+// ---------- چت زنده (تاریخچهٔ ماندگار) ----------
+
+model ChatRoom {
+  id          String    @id // dm:<a>__<b> یا grp:<cuid>
+  name        String?
+  kind        String    @default("dm") // dm | group
+  createdById String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+
+  createdBy User?            @relation("ChatRoomCreator", fields: [createdById], references: [id])
+  members   ChatRoomMember[]
+  messages  ChatMessage[]
+}
+
+model ChatRoomMember {
+  id        String   @id @default(cuid())
+  roomId    String
+  userId    String
+  joinedAt  DateTime @default(now())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  room ChatRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  user User     @relation(fields: [userId], references: [id])
+
+  @@unique([roomId, userId])
+}
+
+model ChatMessage {
+  id        String    @id @default(cuid())
+  roomId    String
+  authorId  String
+  type      String    @default("text") // text | file
+  text      String?
+  fileName  String?
+  fileMime  String?
+  fileSize  Int?
+  fileData  String? // data URL — فقط پیام‌های فایل
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  room   ChatRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  author User     @relation(fields: [authorId], references: [id])
+}
+
+// ---------- تنظیمات سایت ----------
+
+model Setting {
+  key   String @id
+  value String
+}
+
+// ---------- نگهبان منابع سیبک (Resource Guard) ----------
+
+// دفتر ثبت هر فایل آپلودی — مبنای محاسبه مصرف کاربران، سقف آپلود و پاک‌سازی فایل‌های یتیم/موقت
+model RgFile {
+  id        String    @id @default(cuid())
+  ownerId   String? // کاربر آپلودکننده (null = سیستم)
+  pathname  String    @unique // مسیر منطقی: uploads/<name> یا chat:<messageId>
+  fileName  String // نام اصلی فایل
+  mimeType  String
+  size      Int // بایت
+  storage   String    @default("LOCAL") // LOCAL (دیسک محلی) | BLOB (Vercel Blob) | DB (درون دیتابیس — پیوست چت)
+  refType   String? // SUBMISSION | TEACHER_CONTENT | CHAT | ... (null = هنوز به موجودیتی وصل نشده/موقت)
+  refId     String?
+  createdAt DateTime  @default(now())
+  deletedAt DateTime? // موجودیت مصرف‌کننده حذف شده — فایل فیزیکی منتظر پاک‌سازی است
+
+  owner User? @relation("RgFileOwner", fields: [ownerId], references: [id])
+
+  @@index([ownerId, deletedAt])
+  @@index([refType, refId])
+  @@index([createdAt])
+}
+
+// رویدادهای نگهبان منابع — هشدار عبور از آستانه، رد آپلود، پاک‌سازی، بکاپ/ری‌استور
+model RgEvent {
+  id        String   @id @default(cuid())
+  type      String // QUOTA_DENIED | USER_WARNING | GLOBAL_WARNING | DB_WARNING | CLEANUP | BACKUP | RESTORE | CONFIG
+  level     String   @default("INFO") // INFO | WARNING | CRITICAL
+  message   String
+  meta      String? // JSON — شامل dedupeKey برای جلوگیری از اسپم رویداد
+  createdAt DateTime @default(now())
+
+  @@index([type, createdAt])
+  @@index([createdAt])
+}

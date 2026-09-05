@@ -1,0 +1,917 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: "Vazirmatn", "Segoe UI", Tahoma, sans-serif;
+  --font-mono: "Vazirmatn", "Segoe UI", monospace;
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+@theme {
+  --animate-float: float 6s ease-in-out infinite;
+  --animate-float-slow: float 9s ease-in-out infinite;
+  --animate-shimmer: shimmer 2.4s linear infinite;
+  --animate-pulse-soft: pulse-soft 3.2s ease-in-out infinite;
+  --animate-marquee: marquee 32s linear infinite;
+  --animate-blob: blob 14s ease-in-out infinite;
+  --animate-fade-in-up: fade-in-up 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+  --animate-scale-in: scale-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+  --animate-slide-in-right: slide-in-right 0.45s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* easing expo-out اشتراکی — بسیار روان */
+:root {
+  --ease-expo-out: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ---------- پالت سیبک — تم سیبی (روشن) ---------- */
+:root {
+  --radius: 0.75rem;
+  --background: oklch(0.988 0.005 125);
+  --foreground: oklch(0.21 0.02 150);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.21 0.02 150);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.21 0.02 150);
+  --primary: oklch(0.62 0.155 150);
+  --primary-foreground: oklch(0.985 0.01 130);
+  --secondary: oklch(0.955 0.012 120);
+  --secondary-foreground: oklch(0.3 0.03 150);
+  --muted: oklch(0.955 0.008 120);
+  --muted-foreground: oklch(0.5 0.02 150);
+  --accent: oklch(0.93 0.04 95);
+  --accent-foreground: oklch(0.35 0.06 80);
+  --destructive: oklch(0.6 0.2 18);
+  --destructive-foreground: oklch(0.985 0.01 130);
+  --border: oklch(0.912 0.01 130);
+  --input: oklch(0.912 0.01 130);
+  --ring: oklch(0.62 0.155 150);
+  --chart-1: oklch(0.65 0.15 152);
+  --chart-2: oklch(0.76 0.14 85);
+  --chart-3: oklch(0.65 0.19 20);
+  --chart-4: oklch(0.68 0.1 180);
+  --chart-5: oklch(0.72 0.15 55);
+  --sidebar: oklch(0.972 0.008 125);
+  --sidebar-foreground: oklch(0.21 0.02 150);
+  --sidebar-primary: oklch(0.62 0.155 150);
+  --sidebar-primary-foreground: oklch(0.985 0.01 130);
+  --sidebar-accent: oklch(0.93 0.03 110);
+  --sidebar-accent-foreground: oklch(0.3 0.04 150);
+  --sidebar-border: oklch(0.9 0.012 130);
+  --sidebar-ring: oklch(0.62 0.155 150);
+}
+
+/* ---------- پالت سیبک — تم تیره ---------- */
+.dark {
+  --background: oklch(0.165 0.012 155);
+  --foreground: oklch(0.93 0.012 140);
+  --card: oklch(0.205 0.014 155);
+  --card-foreground: oklch(0.93 0.012 140);
+  --popover: oklch(0.205 0.014 155);
+  --popover-foreground: oklch(0.93 0.012 140);
+  --primary: oklch(0.72 0.16 150);
+  --primary-foreground: oklch(0.15 0.02 150);
+  --secondary: oklch(0.25 0.014 150);
+  --secondary-foreground: oklch(0.92 0.012 140);
+  --muted: oklch(0.25 0.014 150);
+  --muted-foreground: oklch(0.68 0.015 140);
+  --accent: oklch(0.3 0.05 90);
+  --accent-foreground: oklch(0.9 0.06 85);
+  --destructive: oklch(0.65 0.19 20);
+  --destructive-foreground: oklch(0.98 0.01 130);
+  --border: oklch(0.29 0.014 150);
+  --input: oklch(0.29 0.014 150);
+  --ring: oklch(0.72 0.16 150);
+  --chart-1: oklch(0.72 0.15 152);
+  --chart-2: oklch(0.8 0.14 85);
+  --chart-3: oklch(0.7 0.19 20);
+  --chart-4: oklch(0.75 0.1 180);
+  --chart-5: oklch(0.78 0.15 55);
+  --sidebar: oklch(0.19 0.014 155);
+  --sidebar-foreground: oklch(0.93 0.012 140);
+  --sidebar-primary: oklch(0.72 0.16 150);
+  --sidebar-primary-foreground: oklch(0.15 0.02 150);
+  --sidebar-accent: oklch(0.26 0.03 130);
+  --sidebar-accent-foreground: oklch(0.9 0.06 85);
+  --sidebar-border: oklch(0.29 0.014 150);
+  --sidebar-ring: oklch(0.72 0.16 150);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: "ss02";
+  }
+  ::selection {
+    background: color-mix(in oklab, var(--primary) 26%, transparent);
+    color: var(--foreground);
+  }
+}
+
+/* ---------- اسکرول‌بار لاغر و گرد ---------- */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: color-mix(in oklab, var(--border) 85%, transparent);
+  border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--primary);
+}
+
+/* ---------- فاوس روان ---------- */
+:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+  transition: outline-offset 0.15s ease;
+}
+
+/* ---------- ابزارهای سفارشی سیبک ---------- */
+.glass {
+  background: color-mix(in oklab, var(--card) 72%, transparent);
+  backdrop-filter: blur(16px) saturate(1.3);
+  -webkit-backdrop-filter: blur(16px) saturate(1.3);
+  border: 1px solid color-mix(in oklab, var(--border) 72%, transparent);
+}
+
+.glass-strong {
+  background: color-mix(in oklab, var(--card) 88%, transparent);
+  backdrop-filter: blur(22px) saturate(1.4);
+  -webkit-backdrop-filter: blur(22px) saturate(1.4);
+  border: 1px solid color-mix(in oklab, var(--border) 80%, transparent);
+}
+
+.text-gradient {
+  background-image: linear-gradient(105deg, var(--primary) 10%, var(--chart-2) 90%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.card-hover {
+  transition: transform 0.28s var(--ease-expo-out), box-shadow 0.28s ease,
+    border-color 0.28s ease;
+}
+.card-hover:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 14px 36px -14px color-mix(in oklab, var(--primary) 30%, transparent);
+  border-color: color-mix(in oklab, var(--primary) 35%, var(--border));
+}
+
+/* ---------- طومار کاغذی گرایانه (parchment scroll) ---------- */
+.parchment {
+  position: relative;
+  background:
+    /* بافت نویز ظریف */ radial-gradient(
+      ellipse at 30% 20%,
+      rgba(120, 80, 30, 0.06),
+      transparent 55%
+    ),
+    radial-gradient(
+      ellipse at 70% 80%,
+      rgba(180, 130, 60, 0.08),
+      transparent 55%
+    ),
+    /* بافت کاغذی نقطه‌ای */
+      linear-gradient(
+        135deg,
+        rgba(120, 80, 30, 0.04) 0%,
+        transparent 30%,
+        rgba(120, 80, 30, 0.04) 60%,
+        transparent 90%
+      ),
+    /* پایهٔ کرم کهربایی */
+      linear-gradient(180deg, #f5e6c8 0%, #f0d9a8 50%, #f5e6c8 100%);
+  color: #4a3520;
+  box-shadow:
+    inset 0 0 40px rgba(120, 80, 30, 0.1),
+    0 8px 28px -10px rgba(120, 80, 30, 0.2);
+}
+
+.dark .parchment {
+  background:
+    radial-gradient(
+      ellipse at 30% 20%,
+      rgba(220, 180, 100, 0.1),
+      transparent 55%
+    ),
+    radial-gradient(
+      ellipse at 70% 80%,
+      rgba(200, 160, 80, 0.12),
+      transparent 55%
+    ),
+    linear-gradient(180deg, #3a2e1c 0%, #4a3a22 50%, #3a2e1c 100%);
+  color: #f0d9a8;
+  box-shadow:
+    inset 0 0 40px rgba(0, 0, 0, 0.4),
+    0 8px 28px -10px rgba(0, 0, 0, 0.6);
+}
+
+/* لبه‌های لوله‌شدهٔ طومار — بالا و پایین */
+.parchment-edge-top,
+.parchment-edge-bottom {
+  position: relative;
+  height: 14px;
+  background: linear-gradient(
+    180deg,
+    rgba(80, 50, 20, 0.65) 0%,
+    rgba(140, 95, 40, 0.35) 55%,
+    rgba(245, 230, 200, 0) 100%
+  );
+  border-radius: 999px 999px 0 0;
+}
+.parchment-edge-bottom {
+  background: linear-gradient(
+    0deg,
+    rgba(80, 50, 20, 0.65) 0%,
+    rgba(140, 95, 40, 0.35) 55%,
+    rgba(245, 230, 200, 0) 100%
+  );
+  border-radius: 0 0 999px 999px;
+}
+.dark .parchment-edge-top,
+.dark .parchment-edge-bottom {
+  background: linear-gradient(
+    180deg,
+    rgba(0, 0, 0, 0.85) 0%,
+    rgba(0, 0, 0, 0.3) 55%,
+    rgba(58, 46, 28, 0) 100%
+  );
+}
+.dark .parchment-edge-bottom {
+  background: linear-gradient(
+    0deg,
+    rgba(0, 0, 0, 0.85) 0%,
+    rgba(0, 0, 0, 0.3) 55%,
+    rgba(58, 46, 28, 0) 100%
+  );
+}
+
+/* متن سنتی روی کاغذ — کمی جادارتر */
+.parchment-text {
+  letter-spacing: 0.01em;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.25);
+}
+.dark .parchment-text {
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.4);
+}
+
+/* مهر سازمان ملل — دایرهٔ تزئینی برای کارت وتو */
+.un-seal {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  border: 3px double color-mix(in oklab, var(--chart-2) 70%, transparent);
+  background: radial-gradient(
+    circle at center,
+    color-mix(in oklab, var(--chart-2) 18%, transparent) 0%,
+    color-mix(in oklab, var(--chart-2) 8%, transparent) 60%,
+    transparent 100%
+  );
+  color: color-mix(in oklab, var(--chart-2) 80%, var(--foreground) 20%);
+  box-shadow:
+    inset 0 0 0 2px color-mix(in oklab, var(--chart-2) 35%, transparent),
+    0 0 0 1px color-mix(in oklab, var(--chart-2) 25%, transparent);
+}
+.un-seal::before,
+.un-seal::after {
+  content: "";
+  position: absolute;
+  inset: -6px;
+  border-radius: 9999px;
+  border: 1px dashed color-mix(in oklab, var(--chart-2) 40%, transparent);
+  pointer-events: none;
+}
+.un-seal::after {
+  inset: -10px;
+  border-style: dotted;
+  opacity: 0.55;
+}
+
+/* ---------- فریم‌های کلیدی ---------- */
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-12px);
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+@keyframes pulse-soft {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.72;
+    transform: scale(0.97);
+  }
+}
+
+@keyframes marquee {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(50%);
+  }
+}
+
+@keyframes blob {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+  33% {
+    transform: translate(24px, -30px) scale(1.08);
+  }
+  66% {
+    transform: translate(-20px, 18px) scale(0.94);
+  }
+}
+
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes slide-in-right {
+  from {
+    opacity: 0;
+    transform: translateX(28px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* نوار براق لودینگ */
+.shimmer-bar {
+  background: linear-gradient(
+    90deg,
+    color-mix(in oklab, var(--primary) 15%, transparent) 25%,
+    color-mix(in oklab, var(--primary) 45%, transparent) 50%,
+    color-mix(in oklab, var(--primary) 15%, transparent) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 2.4s linear infinite;
+}
+
+/* احترام به کاهش حرکت — انیمیشن‌ها به opacity-only تبدیل می‌شوند */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  /* تبدیل تمامی حرکت‌ها به opacity-only برای کاربرانی که حرکت کم خواسته‌اند */
+  @keyframes fade-in-up {
+    from,
+    to {
+      transform: none;
+    }
+  }
+  @keyframes scale-in {
+    from,
+    to {
+      transform: none;
+    }
+  }
+  @keyframes slide-in-right {
+    from,
+    to {
+      transform: none;
+    }
+  }
+}
+/* cache-bust 1787670631 */
+
+/* ============================================================
+   استایل چاپ / خروجی PDF سیبک (native browser print)
+   راهبرد: فقط المنتر با کلاس .printable-area چاپ می‌شود؛
+   سایدبار، هدر، فوتر، دیالوگ‌ها و دکمه‌های .no-print پنهان می‌شوند.
+   ============================================================ */
+@media print {
+  /* ۱) همه چیز را به‌صورت پیش‌فرض پنهان کن (با visibility، نه display،
+        تا جریان layout را حفظ کنیم). */
+  body * {
+    visibility: hidden;
+  }
+
+  /* ۲) فقط printable-area و نوادگانش را visible کن. */
+  .printable-area,
+  .printable-area * {
+    visibility: visible;
+  }
+
+  /* ۳) عناصر .no-print (دکمه‌های عملیات، toggleها) حتی داخل printable-area
+        پنهان می‌مانند. */
+  .no-print,
+  .no-print * {
+    visibility: hidden !important;
+  }
+
+  /* ۴) printable-area را به بالای صفحه ببر و استایل‌های شیشه‌ای را
+        خنثی کن تا روی کاغذ سفید تمیز بنشیند. */
+  .printable-area {
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: auto;
+    left: 0;
+    margin: 0;
+    padding: 1rem;
+    background: white !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    border: none !important;
+  }
+
+  /* ۵) neutralize sticky/fixed فرزندان داخل printable-area (مثل
+        «رتبه من» چسبان در برترین‌ها) تا روی محتوا نیفتند. */
+  .printable-area .sticky,
+  .printable-area .fixed,
+  .printable-area [class*="z-10"],
+  .printable-area [class*="z-20"],
+  .printable-area [class*="z-30"] {
+    position: static !important;
+    z-index: auto !important;
+  }
+
+  /* ۶) حذف سایه‌ها، blur و افکت‌های حرکتی روی همهٔ فرزندان printable
+        برای خروجی وکتور تمیز. */
+  .printable-area * {
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    animation: none !important;
+    transition: none !important;
+  }
+
+  /* ۷) حفظ پس‌زمینه‌ها و رنگ‌ها (charts، badges، dotها) روی کاغذ. */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* ۸) حاشیهٔ استاندارد صفحهٔ چاپ. */
+  @page {
+    margin: 1.5cm;
+  }
+
+  /* ۹) فریم‌ها در چاپ بدون حرکت بیفتند. */
+  html {
+    scroll-behavior: auto !important;
+  }
+}
+/* cache-bust print 1787677974358 */
+
+/* ============================================================
+   پروندهٔ کاراگاهی سیبک — manila folder + paper stamps + clips
+   ============================================================ */
+
+/* اسکرول‌بار سفارشی برای سایدبار و لیست‌های درون‌خطی */
+.sibak-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in oklab, var(--primary) 35%, transparent)
+    transparent;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+.sibak-scroll::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+.sibak-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.sibak-scroll::-webkit-scrollbar-thumb {
+  background: color-mix(in oklab, var(--primary) 30%, transparent);
+  border-radius: 9999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+.sibak-scroll::-webkit-scrollbar-thumb:hover {
+  background: color-mix(in oklab, var(--primary) 50%, transparent);
+  background-clip: padding-box;
+}
+
+/* پوشهٔ manila — بدنهٔ اصلی پرونده */
+.case-folder {
+  position: relative;
+  background:
+    /* بافت کاغذی نقطه‌ای */
+      radial-gradient(
+        circle at 20% 30%,
+        rgba(120, 80, 30, 0.06) 0%,
+        transparent 30%
+      ),
+    radial-gradient(
+      circle at 80% 70%,
+      rgba(180, 130, 60, 0.08) 0%,
+      transparent 35%
+    ),
+    /* خطوط افقی ظریف (paper lines) */
+      repeating-linear-gradient(
+        0deg,
+        rgba(120, 80, 30, 0.025) 0px,
+        rgba(120, 80, 30, 0.025) 1px,
+        transparent 1px,
+        transparent 28px
+      ),
+    /* پایهٔ manila */
+      linear-gradient(135deg, #f1d9a8 0%, #e8c98a 50%, #f1d9a8 100%);
+  color: #4a3520;
+  border: 1px solid color-mix(in oklab, #8b6914 50%, transparent);
+  box-shadow:
+    inset 0 0 60px rgba(120, 80, 30, 0.12),
+    inset 0 0 0 1px rgba(255, 240, 200, 0.4),
+    0 12px 40px -12px rgba(80, 50, 20, 0.4),
+    0 4px 8px -4px rgba(80, 50, 20, 0.2);
+  border-radius: 4px;
+}
+
+.dark .case-folder {
+  background:
+    radial-gradient(
+      circle at 20% 30%,
+      rgba(220, 180, 100, 0.1) 0%,
+      transparent 30%
+    ),
+    radial-gradient(
+      circle at 80% 70%,
+      rgba(200, 160, 80, 0.12) 0%,
+      transparent 35%
+    ),
+    repeating-linear-gradient(
+      0deg,
+      rgba(220, 180, 100, 0.04) 0px,
+      rgba(220, 180, 100, 0.04) 1px,
+      transparent 1px,
+      transparent 28px
+    ),
+    linear-gradient(135deg, #3a2e1c 0%, #4a3a22 50%, #3a2e1c 100%);
+  color: #f0d9a8;
+  border-color: color-mix(in oklab, #8b6914 60%, transparent);
+  box-shadow:
+    inset 0 0 60px rgba(0, 0, 0, 0.5),
+    inset 0 0 0 1px rgba(255, 200, 100, 0.1),
+    0 12px 40px -12px rgba(0, 0, 0, 0.6);
+}
+
+/* زبانهٔ پرونده — tab روی پوشه */
+.case-tab {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1.25rem;
+  background: linear-gradient(
+    180deg,
+    #e8c98a 0%,
+    #d4b06a 100%
+  );
+  color: #4a3520;
+  border: 1px solid color-mix(in oklab, #8b6914 50%, transparent);
+  border-bottom: none;
+  border-radius: 8px 8px 0 0;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 240, 200, 0.5),
+    0 -2px 4px -2px rgba(80, 50, 20, 0.2);
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  text-shadow: 0 1px 0 rgba(255, 240, 200, 0.4);
+}
+.dark .case-tab {
+  background: linear-gradient(180deg, #4a3a22 0%, #3a2e1c 100%);
+  color: #f0d9a8;
+  border-color: color-mix(in oklab, #8b6914 60%, transparent);
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.4);
+}
+
+/* مهر قرمز رسمی — CONFIDENTIAL / SUSPENDED و... */
+.case-stamp {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.85rem;
+  border: 2.5px solid currentColor;
+  border-radius: 4px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-size: 0.7rem;
+  background: transparent;
+  position: relative;
+  filter: drop-shadow(0 1px 0 rgba(0, 0, 0, 0.1));
+  /* مهر کمی کج */
+  transform: rotate(-3deg);
+  opacity: 0.92;
+  /* بافت مهر ناقص — جایی که جوهر نرفته */
+  background-image: radial-gradient(
+    circle at 30% 70%,
+    transparent 0%,
+    transparent 60%,
+    rgba(0, 0, 0, 0.04) 62%,
+    transparent 64%
+  );
+}
+.case-stamp-red {
+  color: #b91c1c;
+}
+.case-stamp-green {
+  color: #15803d;
+}
+.case-stamp-amber {
+  color: #a16207;
+}
+.case-stamp-gray {
+  color: #475569;
+}
+.dark .case-stamp-red {
+  color: #f87171;
+}
+.dark .case-stamp-green {
+  color: #4ade80;
+}
+.dark .case-stamp-amber {
+  color: #fbbf24;
+}
+.dark .case-stamp-gray {
+  color: #94a3b8;
+}
+
+/* مهر دایره‌ای بزرگ گوشه‌ای (CONFIDENTIAL روی گوشهٔ پرونده) */
+.case-seal {
+  position: absolute;
+  top: 1.25rem;
+  left: 1.25rem;
+  width: 5.5rem;
+  height: 5.5rem;
+  border-radius: 9999px;
+  border: 3px double currentColor;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  text-align: center;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  line-height: 1.1;
+  transform: rotate(-12deg);
+  opacity: 0.85;
+  pointer-events: none;
+  color: #b91c1c;
+  background-image: radial-gradient(
+    circle at 30% 70%,
+    transparent 0%,
+    transparent 60%,
+    rgba(0, 0, 0, 0.04) 62%,
+    transparent 64%
+  );
+}
+.case-seal::before,
+.case-seal::after {
+  content: "";
+  position: absolute;
+  inset: -6px;
+  border-radius: 9999px;
+  border: 1px dashed currentColor;
+  opacity: 0.5;
+  pointer-events: none;
+}
+.case-seal::after {
+  inset: -10px;
+  border-style: dotted;
+  opacity: 0.35;
+}
+.dark .case-seal {
+  color: #f87171;
+}
+
+/* گیره کاغذی — paper clip تزئینی بالای کارت */
+.paperclip {
+  position: absolute;
+  top: -10px;
+  right: 24px;
+  width: 28px;
+  height: 50px;
+  border: 2px solid #94a3b8;
+  border-bottom: none;
+  border-radius: 14px 14px 0 0;
+  pointer-events: none;
+  z-index: 2;
+  transform: rotate(8deg);
+}
+.paperclip::before {
+  content: "";
+  position: absolute;
+  top: 14px;
+  left: 4px;
+  right: 4px;
+  height: 32px;
+  border: 2px solid #94a3b8;
+  border-top: none;
+  border-radius: 0 0 8px 8px;
+}
+.dark .paperclip {
+  border-color: #64748b;
+}
+.dark .paperclip::before {
+  border-color: #64748b;
+}
+
+/* سوراخ کاغذی (punch holes) — روی لبهٔ چپ پرونده */
+.case-punch-holes {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: 8px;
+  width: 14px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  padding: 2rem 0;
+  pointer-events: none;
+}
+.case-punch-holes::before,
+.case-punch-holes::after,
+.case-punch-holes > span {
+  content: "";
+  display: block;
+  width: 12px;
+  height: 12px;
+  border-radius: 9999px;
+  background: rgba(0, 0, 0, 0.25);
+  box-shadow:
+    inset 0 1px 2px rgba(0, 0, 0, 0.4),
+    0 0 0 1px rgba(255, 255, 255, 0.15);
+}
+
+/* رشتهٔ متنی تایپ‌شده — تایپ‌writer با فاصلهٔ حروف */
+.typewriter {
+  font-family: var(--font-mono, ui-monospace, monospace);
+  letter-spacing: 0.04em;
+  font-weight: 600;
+}
+
+/* خط‌چین‌های جداکنندهٔ دست‌نویس */
+.case-divider {
+  position: relative;
+  height: 1px;
+  background-image: linear-gradient(
+    to right,
+    transparent 0%,
+    color-mix(in oklab, currentColor 40%, transparent) 20%,
+    color-mix(in oklab, currentColor 40%, transparent) 80%,
+    transparent 100%
+  );
+  margin: 1rem 0;
+}
+.case-divider::after {
+  content: "✶";
+  position: absolute;
+  top: -0.65rem;
+  left: 50%;
+  transform: translateX(-50%);
+  background: inherit;
+  padding: 0 0.5rem;
+  font-size: 0.75rem;
+  color: color-mix(in oklab, currentColor 60%, transparent);
+}
+
+/* پینگ شده (pinned note) — یک یادداشت چسبیده به پرونده */
+.pinned-note {
+  position: relative;
+  background: linear-gradient(180deg, #fff8e1 0%, #ffecb3 100%);
+  color: #5b3d1a;
+  padding: 0.75rem 1rem 0.75rem 1rem;
+  border: 1px solid rgba(120, 80, 30, 0.2);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.4),
+    0 6px 14px -6px rgba(80, 50, 20, 0.25);
+  border-radius: 2px;
+}
+.pinned-note::before {
+  content: "";
+  position: absolute;
+  top: -6px;
+  left: 12px;
+  width: 10px;
+  height: 10px;
+  border-radius: 9999px;
+  background: radial-gradient(
+    circle at 30% 30%,
+    #f87171 0%,
+    #b91c1c 100%
+  );
+  box-shadow:
+    0 2px 3px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+.dark .pinned-note {
+  background: linear-gradient(180deg, #3a2e1c 0%, #4a3a22 100%);
+  color: #f0d9a8;
+}
+
+/* شماره پرونده در گوشه */
+.case-number {
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  color: color-mix(in oklab, currentColor 60%, transparent);
+  text-transform: uppercase;
+}
+
