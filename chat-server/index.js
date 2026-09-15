@@ -92,13 +92,20 @@ io.on("connection", async (socket) => {
       }
 
       // اطلاع به سازنده
-      socket.emit("room:created", {
-        id: roomId,
-        name: data.name,
-        kind: "group",
-        members: uniqueMembers.map((id) => ({ userId: id })),
+            socket.emit("room:created", {
+        room: {
+          id: roomId,
+          name: data.name || "گروه جدید",
+          kind: "group",
+          members: uniqueMembers.map((id) => ({
+            userId: id,
+            username: "",
+            name: "",
+            avatar: null,
+            role: "",
+          })),
+        },
       });
-
       // عضو شدن خودکار سازنده در اتاق
       socket.join(roomId);
 
