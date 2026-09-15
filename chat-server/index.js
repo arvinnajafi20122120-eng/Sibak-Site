@@ -44,14 +44,41 @@ io.on("connection", async (socket) => {
        WHERE m.userId = ?`,
       [user.id]
     );
-    const rooms = result.rows.map((r) => ({
-      id: r.id,
-      name: r.name,
-      kind: r.kind,
-      members: [],
-      createdAt: r.createdAt,
-    }));
-    socket.emit("rooms", rooms);
+       // دریافت آخرین پیام هر اتاق
+    const roomsWithLastMsg = [];
+    for (const r of result.rows) {
+      let lastMessage = null;
+      try {
+        const msgResult = await db.execute(
+          `SELECT id, roomId, senderId, content, createdAt FROM ChatMessage WHERE roomId = ? ORDER BY createdAt DESC LIMIT 1`,
+          [r.id]
+        );
+        if (msgResult.rows.length > 0) {
+          const m = msgResult.rows[0];
+          lastMessage = {
+            id: m.id,
+            roomId: m.roomId,
+            senderId: m.senderId,
+            type: "text",
+            text: m.content,
+            createdAt: m.createdAt,
+          };
+        }
+      } catch (e) {
+        // ignore
+      }
+      roomsWithLastMsg.push({
+        room: {
+          id: r.id,
+          name: r.name,
+          kind: r.kind,
+          members: [],
+          createdAt: r.createdAt,
+        },
+        lastMessage,
+      });
+    }
+    socket.emit("rooms", { rooms: roomsWithLastMsg });
   } catch (e) {
     console.error("[chat] rooms error:", e.message);
   }
