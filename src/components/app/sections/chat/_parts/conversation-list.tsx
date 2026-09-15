@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useMemo, useState } from "react";
 import { MessageSquare, Search, UserPlus, Users as UsersIcon } from "lucide-react";
@@ -108,7 +108,7 @@ export function ConversationList({
                 </span>
                               <button
                   onClick={onCreateGroup}
-                  className="rounded-md px-3 py-1.5 text-xs font-bold text-primary hover:bg-primary/10 active:scale-95 transition-all min-h-[32px] min-w-[60px]"
+                  className="relative z-10 rounded-md px-3 py-1.5 text-xs font-bold text-primary hover:bg-primary/10 active:scale-95 transition-all min-h-[32px] min-w-[60px]"
                 >
                   + جدید
                 </button>
@@ -275,3 +275,4 @@ function RoomRow({
     </button>
   );
 }
+
