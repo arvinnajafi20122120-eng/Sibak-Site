@@ -2,7 +2,7 @@ const { Server } = require("socket.io");
 const http = require("http");
 const crypto = require("crypto");
 const { createClient } = require("@libsql/client");
-const { jwtVerify } = require("jose");
+const jwt = require("jsonwebtoken");
 
 const server = http.createServer();
 const io = new Server(server, {
@@ -19,11 +19,11 @@ const db = createClient({
   authToken: process.env.TURSO_TOKEN,
 });
 
-io.use(async (socket, next) => {
+io.use((socket, next) => {
   const token = socket.handshake.auth?.token;
   if (!token) return next(new Error("Unauthorized"));
   try {
-    const { payload } = await jwtVerify(token, secretKey, { issuer: "sibak" });
+    const payload = jwt.verify(token, JWT_SECRET, { issuer: "sibak" });
     socket.data.user = { id: payload.uid, role: payload.role };
     next();
   } catch (e) {
