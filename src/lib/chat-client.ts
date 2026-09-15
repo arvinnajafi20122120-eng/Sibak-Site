@@ -77,9 +77,7 @@ export function getChatSocket(
     role: user.role,
   };
 
-  const chatUrl =
-    process.env.NEXT_PUBLIC_CHAT_URL;
-
+     const chatUrl = "https://sibak-site-production.up.railway.app";
   const socketOptions = {
     transports: [
       "websocket",
