@@ -1,29 +1,33 @@
 const { Server } = require("socket.io");
 const http = require("http");
-const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
 const { createClient } = require("@libsql/client");
+const { jwtVerify } = require("jose");
 
 const server = http.createServer();
 const io = new Server(server, {
   cors: { origin: "*", methods: ["GET", "POST"] },
 });
 
-const JWT_SECRET = process.env.JWT_SECRET || "sibak-secret";
-const PORT = process.env.PORT || 3001;
+const JWT_SECRET = process.env.JWT_SECRET || "sibak-dev-secret-key-change-me";
+const PORT = process.env.PORT || 8080;
+
+const secretKey = new TextEncoder().encode(JWT_SECRET);
 
 const db = createClient({
   url: process.env.TURSO_URL,
   authToken: process.env.TURSO_TOKEN,
 });
 
-io.use((socket, next) => {
+io.use(async (socket, next) => {
   const token = socket.handshake.auth?.token;
   if (!token) return next(new Error("Unauthorized"));
   try {
-    socket.data.user = jwt.verify(token, JWT_SECRET);
+    const { payload } = await jwtVerify(token, secretKey, { issuer: "sibak" });
+    socket.data.user = { id: payload.uid, role: payload.role };
     next();
-  } catch {
+  } catch (e) {
+    console.error("[chat] auth error:", e.message);
     next(new Error("Invalid token"));
   }
 });
@@ -64,6 +68,45 @@ io.on("connection", async (socket) => {
       content: data.content,
       createdAt: now,
     });
+  });
+
+  // ─── ساخت گروه جدید ───
+  socket.on("room:create", async (data) => {
+    try {
+      const roomId = `group:${crypto.randomUUID()}`;
+      const memberIds = [user.id, ...(data.memberIds || [])];
+      const uniqueMembers = [...new Set(memberIds)];
+
+      // ذخیره اتاق در دیتابیس
+      await db.execute(
+        `INSERT INTO ChatRoom (id, name, kind, createdAt) VALUES (?, ?, 'group', ?)`,
+        [roomId, data.name || "گروه جدید", new Date().toISOString()]
+      );
+
+      // اضافه کردن اعضا
+      for (const memberId of uniqueMembers) {
+        await db.execute(
+          `INSERT OR IGNORE INTO ChatRoomMember (roomId, userId, joinedAt) VALUES (?, ?, ?)`,
+          [roomId, memberId, new Date().toISOString()]
+        );
+      }
+
+      // اطلاع به سازنده
+      socket.emit("room:created", {
+        id: roomId,
+        name: data.name,
+        kind: "group",
+        members: uniqueMembers.map((id) => ({ userId: id })),
+      });
+
+      // عضو شدن خودکار سازنده در اتاق
+      socket.join(roomId);
+
+      console.log(`[chat] room created: ${roomId} by ${user.id}`);
+    } catch (e) {
+      console.error("[chat] room:create error:", e.message);
+      socket.emit("room:create:error", { message: e.message });
+    }
   });
 
   socket.on("typing", (data) => {
