@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 
@@ -104,7 +104,7 @@ export function CreateGroupDialog({
               placeholder="جستجوی همکار..."
               className="mb-2"
             />
-            <ScrollArea className="max-h-64">
+            <ScrollArea className="h-64 min-h-0">
               <div className="flex flex-col gap-1">
                 {filtered.length === 0 && (
                   <p className="py-4 text-center text-xs text-muted-foreground">
@@ -153,7 +153,7 @@ export function CreateGroupDialog({
           )}
         </div>
 
-        <DialogFooter className="gap-2">
+        <DialogFooter className="sticky bottom-0 z-10 gap-2 bg-background pt-3">
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             انصراف
           </Button>
@@ -169,3 +169,5 @@ export function CreateGroupDialog({
     </Dialog>
   );
 }
+
+
