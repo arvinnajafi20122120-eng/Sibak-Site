@@ -35,8 +35,9 @@ io.on("connection", async (socket) => {
   const user = socket.data.user;
   console.log(`[chat] connect ${user.id}`);
 
-  // ─── ارسال لیست اتاق‌های کاربر بعد از اتصال ───
+    // ─── ارسال لیست اتاق‌های کاربر بعد از اتصال ───
   try {
+    console.log(`[chat] fetching rooms for ${user.id}`);
     const result = await db.execute(
       `SELECT r.id, r.name, r.kind, r.createdAt
        FROM ChatRoom r
@@ -44,6 +45,7 @@ io.on("connection", async (socket) => {
        WHERE m.userId = ?`,
       [user.id]
     );
+    console.log(`[chat] found ${result.rows.length} rooms`);
        // دریافت آخرین پیام هر اتاق
     const roomsWithLastMsg = [];
     for (const r of result.rows) {
