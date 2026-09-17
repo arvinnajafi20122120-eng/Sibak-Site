@@ -18,6 +18,15 @@ const db = createClient({
   authToken: process.env.TURSO_TOKEN,
 });
 console.log(`[chat] DB URL: ${process.env.TURSO_URL?.substring(0, 30)}...`);
+      // تست read-after-write
+      const verify = await db.execute(
+        `SELECT COUNT(*) as cnt FROM ChatRoom WHERE id = ?`,
+        [roomId]
+      );
+      console.log(`[chat] VERIFY: ${verify.rows[0]?.cnt} rooms with id ${roomId}`);
+      
+      const verifyAll = await db.execute(`SELECT COUNT(*) as cnt FROM ChatRoom`);
+      console.log(`[chat] VERIFY ALL: ${verifyAll.rows[0]?.cnt} total rooms in DB`);
 // ─── Auth Middleware ───
 io.use((socket, next) => {
   const token = socket.handshake.auth?.token;
