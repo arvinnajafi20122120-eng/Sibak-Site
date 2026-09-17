@@ -12,11 +12,10 @@ const io = new Server(server, {
 const JWT_SECRET = process.env.JWT_SECRET || "sibak-dev-secret-key-change-me";
 const PORT = process.env.PORT || 8080;
 
-// حذف syncUrl برای جلوگیری از replica lag
+// استفاده از HTTP client به جای embedded replica
 const db = createClient({
-  url: process.env.TURSO_URL,
+  url: process.env.TURSO_URL.replace("libsql://", "https://"),
   authToken: process.env.TURSO_TOKEN,
-  syncUrl: undefined,
 });
 console.log(`[chat] DB URL: ${process.env.TURSO_URL?.substring(0, 30)}...`);
 // ─── Auth Middleware ───
