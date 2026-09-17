@@ -12,11 +12,13 @@ const io = new Server(server, {
 const JWT_SECRET = process.env.JWT_SECRET || "sibak-dev-secret-key-change-me";
 const PORT = process.env.PORT || 8080;
 
+// حذف syncUrl برای جلوگیری از replica lag
 const db = createClient({
   url: process.env.TURSO_URL,
   authToken: process.env.TURSO_TOKEN,
+  syncUrl: undefined,
 });
-
+console.log(`[chat] DB URL: ${process.env.TURSO_URL?.substring(0, 30)}...`);
 // ─── Auth Middleware ───
 io.use((socket, next) => {
   const token = socket.handshake.auth?.token;
