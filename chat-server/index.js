@@ -47,8 +47,7 @@ io.on("connection", async function(socket) {
     for (var i = 0; i < result.rows.length; i++) {
       var r = result.rows[i];
       var lm = null;
-      try {
-        var mr = await db.execute("SELECT id, roomId, senderId, content, createdAt FROM ChatMessage WHERE roomId = ? ORDER BY createdAt DESC LIMIT 1", [r.id]);
+      try {var mr = await db.execute("SELECT id, roomId, authorId as senderId, text as content, createdAt FROM ChatMessage WHERE roomId = ? ORDER BY createdAt DESC LIMIT 1", [r.id]);
         if (mr.rows.length > 0) { lm = { id: mr.rows[0].id, roomId: mr.rows[0].roomId, senderId: mr.rows[0].senderId, type: "text", text: mr.rows[0].content, createdAt: mr.rows[0].createdAt }; }
       } catch (e2) {}
       list.push({ room: { id: r.id, name: r.name, kind: r.kind, members: [], createdAt: r.createdAt }, lastMessage: lm });
@@ -62,7 +61,7 @@ io.on("connection", async function(socket) {
   socket.on("join", async function(roomId) {
     socket.join(roomId);
     try {
-      var h = await db.execute("SELECT id, roomId, senderId, content, createdAt FROM ChatMessage WHERE roomId = ? ORDER BY createdAt DESC LIMIT 50", [roomId]);
+      var h = await db.execute("SELECT id, roomId, authorId as senderId, text as content, createdAt FROM ChatMessage WHERE roomId = ? ORDER BY createdAt DESC LIMIT 50", [roomId]);
       socket.emit("history", h.rows.reverse());
     } catch (e) { console.error("[chat] history error:", e.message); }
     socket.to(roomId).emit("user:joined", { userId: user.id });
@@ -73,7 +72,7 @@ io.on("connection", async function(socket) {
     var id = crypto.randomUUID();
     var now = new Date().toISOString();
     try {
-      await db.execute("INSERT INTO ChatMessage (id, roomId, senderId, content, createdAt) VALUES (?, ?, ?, ?, ?)", [id, data.roomId, user.id, data.content, now]);
+     await db.execute("INSERT INTO ChatMessage (id, roomId, authorId, type, text, createdAt, updatedAt) VALUES (?, ?, ?, 'text', ?, ?, ?)", [id, data.roomId, user.id, data.content, now, now]);
       console.log("[chat] saved: " + id);
     } catch (e) { console.error("[chat] save error:", e.message); }
     io.to(data.roomId).emit("message:new", { id: id, roomId: data.roomId, senderId: user.id, content: data.content, createdAt: now });
