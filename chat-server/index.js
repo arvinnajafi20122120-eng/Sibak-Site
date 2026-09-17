@@ -58,7 +58,8 @@ io.on("connection", async function(socket) {
 
   socket.emit("hello", { userId: user.id });
 
-  socket.on("join", async function(roomId) {
+  // اصلاح نام event برای join
+  socket.on("room:join", async function(roomId) {
     socket.join(roomId);
     try {
       var h = await db.execute("SELECT id, roomId, authorId as senderId, text as content, createdAt FROM ChatMessage WHERE roomId = ? ORDER BY createdAt DESC LIMIT 50", [roomId]);
@@ -69,7 +70,8 @@ io.on("connection", async function(socket) {
     socket.to(roomId).emit("user:joined", { userId: user.id });
   });
 
-  socket.on("message", async function(data) {
+  // اصلاح نام event برای ارسال پیام (طبق لاگ کلاینت: message:send)
+  socket.on("message:send", async function(data) {
     console.log("[chat] message from " + user.id + " in " + data.roomId);
     var id = crypto.randomUUID();
     var now = new Date().toISOString();
@@ -79,6 +81,7 @@ io.on("connection", async function(socket) {
     } catch (e) {
       console.error("[chat] save error:", e.message);
     }
+    // اصلاح نام event پاسخ (طبق لاگ کلاینت: message:new)
     io.to(data.roomId).emit("message:new", { id: id, roomId: data.roomId, senderId: user.id, content: data.content, createdAt: now });
   });
 
