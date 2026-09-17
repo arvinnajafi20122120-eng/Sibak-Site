@@ -1,4 +1,4 @@
-const { Server } = require("socket.io");
+﻿const { Server } = require("socket.io");
 const http = require("http");
 const crypto = require("crypto");
 const jwt = require("jsonwebtoken");
@@ -105,4 +105,4 @@ io.on("connection", async function(socket) {
   socket.on("disconnect", function() { console.log("[chat] disconnect " + user.id); });
 });
 
-server.listen(PORT, function() { console.log("Chat server running on port " + PORT); });
+server.listen(PORT, function() { console.log("Chat server running on port " + PORT); });`n// updated
