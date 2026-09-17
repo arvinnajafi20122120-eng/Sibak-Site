@@ -87,7 +87,7 @@ io.on("connection", async function(socket) {
       await db.execute("INSERT INTO ChatRoom (id, name, kind, createdAt) VALUES (?, ?, 'group', ?)", [roomId, data.name || "New Group", new Date().toISOString()]);
       console.log("[chat] ChatRoom inserted: " + roomId);
       for (var j = 0; j < uniq.length; j++) {
-        await db.execute("INSERT OR IGNORE INTO ChatRoomMember (roomId, userId, joinedAt) VALUES (?, ?, ?)", [roomId, uniq[j], new Date().toISOString()]);
+      await db.execute("INSERT OR IGNORE INTO ChatRoomMember (id, roomId, userId, joinedAt) VALUES (?, ?, ?, ?)", [crypto.randomUUID(), roomId, uniq[j], new Date().toISOString()]);
         console.log("[chat] Member inserted: " + uniq[j]);
       }
       var v = await db.execute("SELECT COUNT(*) as cnt FROM ChatRoom WHERE id = ?", [roomId]);
