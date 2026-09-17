@@ -59,7 +59,9 @@ io.on("connection", async function(socket) {
   socket.emit("hello", { userId: user.id });
 
   // اصلاح نام event برای join
-  socket.on("room:join", async function(roomId) {
+    socket.on("room:join", async function(data) {
+    var roomId = typeof data === "string" ? data : data.roomId;
+    console.log("[chat] room:join received: " + roomId + " from " + user.id);
     socket.join(roomId);
     try {
       var h = await db.execute("SELECT id, roomId, authorId as senderId, text as content, createdAt FROM ChatMessage WHERE roomId = ? ORDER BY createdAt DESC LIMIT 50", [roomId]);
