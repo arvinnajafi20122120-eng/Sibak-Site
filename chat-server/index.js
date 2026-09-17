@@ -71,12 +71,13 @@ io.on("connection", async function(socket) {
   });
 
   // اصلاح نام event برای ارسال پیام (طبق لاگ کلاینت: message:send)
-  socket.on("message:send", async function(data) {
+    socket.on("message:send", async function(data) {
     console.log("[chat] message from " + user.id + " in " + data.roomId);
+    console.log("[chat] DATA: " + JSON.stringify(data));
     var id = crypto.randomUUID();
     var now = new Date().toISOString();
     try {
-      await db.execute("INSERT INTO ChatMessage (id, roomId, authorId, type, text, createdAt, updatedAt) VALUES (?, ?, ?, 'text', ?, ?, ?)", [id, data.roomId, user.id, data.content, now, now]);
+      await db.execute("INSERT INTO ChatMessage (id, roomId, authorId, type, text, createdAt, updatedAt) VALUES (?, ?, ?, 'text', ?, ?, ?)", [id, data.roomId, user.id, data.content || "", now, now]);
       console.log("[chat] saved: " + id);
     } catch (e) {
       console.error("[chat] save error:", e.message);
