@@ -35,7 +35,7 @@ io.on("connection", async (socket) => {
   const user = socket.data.user;
   console.log(`[chat] connect ${user.id}`);
 
-    // ─── ارسال لیست اتاق‌های کاربر بعد از اتصال ───
+  // ─── ارسال لیست اتاق‌های کاربر بعد از اتصال ───
   try {
     console.log(`[chat] fetching rooms for ${user.id}`);
     const result = await db.execute(
@@ -46,7 +46,6 @@ io.on("connection", async (socket) => {
       [user.id]
     );
     console.log(`[chat] found ${result.rows.length} rooms`);
-       // دریافت آخرین پیام هر اتاق
     const roomsWithLastMsg = [];
     for (const r of result.rows) {
       let lastMessage = null;
@@ -67,7 +66,7 @@ io.on("connection", async (socket) => {
           };
         }
       } catch (e) {
-        // ignore
+        console.error("[chat] lastMessage error:", e.message);
       }
       roomsWithLastMsg.push({
         room: {
@@ -112,6 +111,7 @@ io.on("connection", async (socket) => {
         `INSERT INTO ChatMessage (id, roomId, senderId, content, createdAt) VALUES (?, ?, ?, ?, ?)`,
         [id, data.roomId, user.id, data.content, now]
       );
+      console.log(`[chat] ChatMessage saved: ${id}`);
     } catch (e) {
       console.error("[chat] save error:", e.message);
     }
@@ -122,7 +122,6 @@ io.on("connection", async (socket) => {
       content: data.content,
       createdAt: now,
     };
-    // ارسال به همه اعضای اتاق (از جمله فرستنده)
     io.to(data.roomId).emit("message:new", msg);
   });
 
@@ -137,12 +136,14 @@ io.on("connection", async (socket) => {
         `INSERT INTO ChatRoom (id, name, kind, createdAt) VALUES (?, ?, 'group', ?)`,
         [roomId, data.name || "گروه جدید", new Date().toISOString()]
       );
+      console.log(`[chat] ChatRoom inserted: ${roomId}`);
 
       for (const memberId of uniqueMembers) {
         await db.execute(
           `INSERT OR IGNORE INTO ChatRoomMember (roomId, userId, joinedAt) VALUES (?, ?, ?)`,
           [roomId, memberId, new Date().toISOString()]
         );
+        console.log(`[chat] ChatRoomMember inserted: ${roomId} -> ${memberId}`);
       }
 
       const room = {
