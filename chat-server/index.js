@@ -33,11 +33,6 @@ io.on("connection", async function(socket) {
   console.log("[chat] connect " + user.id);
 
   try {
-    var vm = await db.execute("SELECT COUNT(*) as cnt FROM ChatRoomMember WHERE userId = ?", [user.id]);
-    console.log("[chat] VERIFY MEMBERS: " + vm.rows[0].cnt + " for " + user.id);
-    var am = await db.execute("SELECT roomId, userId FROM ChatRoomMember LIMIT 10");
-    console.log("[chat] SAMPLE: " + JSON.stringify(am.rows));
-
     var result = await db.execute(
       "SELECT r.id, r.name, r.kind, r.createdAt FROM ChatRoom r INNER JOIN ChatRoomMember m ON r.id = m.roomId WHERE m.userId = ?",
       [user.id]
@@ -47,14 +42,19 @@ io.on("connection", async function(socket) {
     for (var i = 0; i < result.rows.length; i++) {
       var r = result.rows[i];
       var lm = null;
-      try {var mr = await db.execute("SELECT id, roomId, authorId as senderId, text as content, createdAt FROM ChatMessage WHERE roomId = ? ORDER BY createdAt DESC LIMIT 1", [r.id]);
-        if (mr.rows.length > 0) { lm = { id: mr.rows[0].id, roomId: mr.rows[0].roomId, senderId: mr.rows[0].senderId, type: "text", text: mr.rows[0].content, createdAt: mr.rows[0].createdAt }; }
+      try {
+        var mr = await db.execute("SELECT id, roomId, authorId as senderId, text as content, createdAt FROM ChatMessage WHERE roomId = ? ORDER BY createdAt DESC LIMIT 1", [r.id]);
+        if (mr.rows.length > 0) {
+          lm = { id: mr.rows[0].id, roomId: mr.rows[0].roomId, senderId: mr.rows[0].senderId, type: "text", text: mr.rows[0].content, createdAt: mr.rows[0].createdAt };
+        }
       } catch (e2) {}
       list.push({ room: { id: r.id, name: r.name, kind: r.kind, members: [], createdAt: r.createdAt }, lastMessage: lm });
     }
     socket.emit("rooms", { rooms: list });
     console.log("[chat] emitted " + list.length + " rooms");
-  } catch (e) { console.error("[chat] rooms error:", e.message); }
+  } catch (e) {
+    console.error("[chat] rooms error:", e.message);
+  }
 
   socket.emit("hello", { userId: user.id });
 
@@ -63,7 +63,9 @@ io.on("connection", async function(socket) {
     try {
       var h = await db.execute("SELECT id, roomId, authorId as senderId, text as content, createdAt FROM ChatMessage WHERE roomId = ? ORDER BY createdAt DESC LIMIT 50", [roomId]);
       socket.emit("history", h.rows.reverse());
-    } catch (e) { console.error("[chat] history error:", e.message); }
+    } catch (e) {
+      console.error("[chat] history error:", e.message);
+    }
     socket.to(roomId).emit("user:joined", { userId: user.id });
   });
 
@@ -72,9 +74,11 @@ io.on("connection", async function(socket) {
     var id = crypto.randomUUID();
     var now = new Date().toISOString();
     try {
-     await db.execute("INSERT INTO ChatMessage (id, roomId, authorId, type, text, createdAt, updatedAt) VALUES (?, ?, ?, 'text', ?, ?, ?)", [id, data.roomId, user.id, data.content, now, now]);
+      await db.execute("INSERT INTO ChatMessage (id, roomId, authorId, type, text, createdAt, updatedAt) VALUES (?, ?, ?, 'text', ?, ?, ?)", [id, data.roomId, user.id, data.content, now, now]);
       console.log("[chat] saved: " + id);
-    } catch (e) { console.error("[chat] save error:", e.message); }
+    } catch (e) {
+      console.error("[chat] save error:", e.message);
+    }
     io.to(data.roomId).emit("message:new", { id: id, roomId: data.roomId, senderId: user.id, content: data.content, createdAt: now });
   });
 
@@ -86,23 +90,33 @@ io.on("connection", async function(socket) {
       await db.execute("INSERT INTO ChatRoom (id, name, kind, createdAt) VALUES (?, ?, 'group', ?)", [roomId, data.name || "New Group", new Date().toISOString()]);
       console.log("[chat] ChatRoom inserted: " + roomId);
       for (var j = 0; j < uniq.length; j++) {
-      await db.execute("INSERT OR IGNORE INTO ChatRoomMember (id, roomId, userId, joinedAt) VALUES (?, ?, ?, ?)", [crypto.randomUUID(), roomId, uniq[j], new Date().toISOString()]);
+        await db.execute("INSERT OR IGNORE INTO ChatRoomMember (id, roomId, userId, joinedAt) VALUES (?, ?, ?, ?)", [crypto.randomUUID(), roomId, uniq[j], new Date().toISOString()]);
         console.log("[chat] Member inserted: " + uniq[j]);
       }
-      var v = await db.execute("SELECT COUNT(*) as cnt FROM ChatRoom WHERE id = ?", [roomId]);
-      console.log("[chat] VERIFY: " + v.rows[0].cnt);
-      var va = await db.execute("SELECT COUNT(*) as cnt FROM ChatRoom");
-      console.log("[chat] TOTAL: " + va.rows[0].cnt);
       var room = { id: roomId, name: data.name || "New Group", kind: "group", members: uniq.map(function(mid) { return { userId: mid, username: "", name: "", avatar: null, role: "" }; }) };
       socket.emit("room:created", { room: room });
       socket.join(roomId);
       console.log("[chat] room created: " + roomId);
-    } catch (e) { console.error("[chat] room:create error:", e.message); socket.emit("error", { error: e.message }); }
+    } catch (e) {
+      console.error("[chat] room:create error:", e.message);
+      socket.emit("error", { error: e.message });
+    }
   });
 
-  socket.on("typing", function(data) { socket.to(data.roomId).emit("typing", { userId: user.id, isTyping: data.isTyping }); });
-  socket.on("leave", function(roomId) { socket.leave(roomId); socket.to(roomId).emit("user:left", { userId: user.id }); });
-  socket.on("disconnect", function() { console.log("[chat] disconnect " + user.id); });
+  socket.on("typing", function(data) {
+    socket.to(data.roomId).emit("typing", { userId: user.id, isTyping: data.isTyping });
+  });
+
+  socket.on("leave", function(roomId) {
+    socket.leave(roomId);
+    socket.to(roomId).emit("user:left", { userId: user.id });
+  });
+
+  socket.on("disconnect", function() {
+    console.log("[chat] disconnect " + user.id);
+  });
 });
 
-server.listen(PORT, function() { console.log("Chat server running on port " + PORT); });`n// updated
+server.listen(PORT, function() {
+  console.log("Chat server running on port " + PORT);
+});
