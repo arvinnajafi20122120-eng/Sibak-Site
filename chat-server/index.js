@@ -37,6 +37,11 @@ io.on("connection", async (socket) => {
   try {
     console.log("[chat] fetching rooms for " + user.id);
     const result = await db.execute(
+    var verifyMembers = await db.execute("SELECT COUNT(*) as cnt FROM ChatRoomMember WHERE userId = ?", [user.id]);
+    console.log("[chat] VERIFY MEMBERS: " + verifyMembers.rows[0].cnt + " memberships for " + user.id);
+    
+    var allMembers = await db.execute("SELECT roomId, userId FROM ChatRoomMember LIMIT 10");
+    console.log("[chat] SAMPLE MEMBERS: " + JSON.stringify(allMembers.rows));
       "SELECT r.id, r.name, r.kind, r.createdAt FROM ChatRoom r INNER JOIN ChatRoomMember m ON r.id = m.roomId WHERE m.userId = ?",
       [user.id]
     );
