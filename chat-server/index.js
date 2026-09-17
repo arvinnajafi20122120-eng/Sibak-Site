@@ -81,6 +81,7 @@ io.on("connection", async (socket) => {
       });
     }
     socket.emit("rooms", { rooms: roomsWithLastMsg });
+    console.log(`[chat] emitted ${roomsWithLastMsg.length} rooms to ${user.id}`);
   } catch (e) {
     console.error("[chat] rooms error:", e.message);
   }
@@ -103,6 +104,7 @@ io.on("connection", async (socket) => {
   });
 
   socket.on("message", async (data) => {
+    console.log(`[chat] message from ${user.id} in ${data.roomId}`);
     const id = crypto.randomUUID();
     const now = new Date().toISOString();
     try {
