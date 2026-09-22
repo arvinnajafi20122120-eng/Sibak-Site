@@ -43,7 +43,8 @@ io.on("connection", async function(socket) {
       var r = result.rows[i];
       var lm = null;
       try {
-        var mr = await db.execute("SELECT id, roomId, authorId as senderId, text as content, createdAt FROM ChatMessage WHERE roomId = ? ORDER BY createdAt DESC LIMIT 1", [r.id]);
+        var mr = await db.execute("SELECT id, roomId, authorId, text, type, createdAt FROM ChatMessage WHERE roomId = ? ORDER BY createdAt DESC LIMIT 1", [r.id]);
+if (mr.rows.length > 0) { lm = { id: mr.rows[0].id, roomId: mr.rows[0].roomId, author: { userId: mr.rows[0].authorId, name: "", username: "" }, text: mr.rows[0].text, type: mr.rows[0].type || "text", createdAt: mr.rows[0].createdAt }; }
         if (mr.rows.length > 0) {
           lm = { id: mr.rows[0].id, roomId: mr.rows[0].roomId, senderId: mr.rows[0].senderId, type: "text", text: mr.rows[0].content, createdAt: mr.rows[0].createdAt };
         }
@@ -63,8 +64,8 @@ io.on("connection", async function(socket) {
     var roomId = typeof data === "string" ? data : data.roomId;
     console.log("[chat] room:join received: " + roomId + " from " + user.id);
     socket.join(roomId);
-    try {
-      var h = await db.execute("SELECT id, roomId, authorId as senderId, text as content, createdAt FROM ChatMessage WHERE roomId = ? ORDER BY createdAt DESC LIMIT 50", [roomId]);
+    try {var h = await db.execute("SELECT id, roomId, authorId, text, type, createdAt FROM ChatMessage WHERE roomId = ? ORDER BY createdAt DESC LIMIT 50", [roomId]);
+h.rows = h.rows.map(function(r) { return { id: r.id, roomId: r.roomId, author: { userId: r.authorId, name: "", username: "" }, text: r.text, type: r.type || "text", createdAt: r.createdAt }; });
       socket.emit("history", h.rows.reverse());
     } catch (e) {
       console.error("[chat] history error:", e.message);
@@ -84,8 +85,7 @@ io.on("connection", async function(socket) {
     } catch (e) {
       console.error("[chat] save error:", e.message);
     }
-    // اصلاح نام event پاسخ (طبق لاگ کلاینت: message:new)
-   io.to(data.roomId).emit("message:new", { id: id, roomId: data.roomId, senderId: user.id, content: data.text || data.content || "", createdAt: now });
+    // اصلاح نام event پاسخ (طبق لاگ کلاینت: message:new)io.to(data.roomId).emit("message:new", { id: id, roomId: data.roomId, author: { userId: user.id, name: "", username: "" }, text: data.text || data.content || "", type: "text", createdAt: now });
   });
 
   socket.on("room:create", async function(data) {
