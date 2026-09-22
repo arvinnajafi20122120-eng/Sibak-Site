@@ -43,13 +43,25 @@ io.on("connection", async function(socket) {
       var r = result.rows[i];
       var lm = null;
       try {
-        var mr = await db.execute("SELECT id, roomId, authorId, text, type, createdAt FROM ChatMessage WHERE roomId = ? ORDER BY createdAt DESC LIMIT 1", [r.id]);
-if (mr.rows.length > 0) { lm = { id: mr.rows[0].id, roomId: mr.rows[0].roomId, author: { userId: mr.rows[0].authorId, name: "", username: "" }, text: mr.rows[0].text, type: mr.rows[0].type || "text", createdAt: mr.rows[0].createdAt }; }
+        var mr = await db.execute(
+          "SELECT id, roomId, authorId, text, type, createdAt FROM ChatMessage WHERE roomId = ? ORDER BY createdAt DESC LIMIT 1",
+          [r.id]
+        );
         if (mr.rows.length > 0) {
-          lm = { id: mr.rows[0].id, roomId: mr.rows[0].roomId, senderId: mr.rows[0].senderId, type: "text", text: mr.rows[0].content, createdAt: mr.rows[0].createdAt };
+          lm = {
+            id: mr.rows[0].id,
+            roomId: mr.rows[0].roomId,
+            author: { userId: mr.rows[0].authorId, name: "", username: "" },
+            text: mr.rows[0].text,
+            type: mr.rows[0].type || "text",
+            createdAt: mr.rows[0].createdAt
+          };
         }
       } catch (e2) {}
-      list.push({ room: { id: r.id, name: r.name, kind: r.kind, members: [], createdAt: r.createdAt }, lastMessage: lm });
+      list.push({
+        room: { id: r.id, name: r.name, kind: r.kind, members: [], createdAt: r.createdAt },
+        lastMessage: lm
+      });
     }
     socket.emit("rooms", { rooms: list });
     console.log("[chat] emitted " + list.length + " rooms");
@@ -59,33 +71,56 @@ if (mr.rows.length > 0) { lm = { id: mr.rows[0].id, roomId: mr.rows[0].roomId, a
 
   socket.emit("hello", { userId: user.id });
 
-  // اصلاح نام event برای join
-    socket.on("room:join", async function(data) {
+  socket.on("room:join", async function(data) {
     var roomId = typeof data === "string" ? data : data.roomId;
     console.log("[chat] room:join received: " + roomId + " from " + user.id);
     socket.join(roomId);
-    try {var h = await db.execute("SELECT id, roomId, authorId, text, type, createdAt FROM ChatMessage WHERE roomId = ? ORDER BY createdAt DESC LIMIT 50", [roomId]);
-h.rows = h.rows.map(function(r) { return { id: r.id, roomId: r.roomId, author: { userId: r.authorId, name: "", username: "" }, text: r.text, type: r.type || "text", createdAt: r.createdAt }; });
-      socket.emit("history", h.rows.reverse());
+    try {
+      var h = await db.execute(
+        "SELECT id, roomId, authorId, text, type, createdAt FROM ChatMessage WHERE roomId = ? ORDER BY createdAt DESC LIMIT 50",
+        [roomId]
+      );
+      var history = h.rows.map(function(r) {
+        return {
+          id: r.id,
+          roomId: r.roomId,
+          author: { userId: r.authorId, name: "", username: "" },
+          text: r.text,
+          type: r.type || "text",
+          createdAt: r.createdAt
+        };
+      });
+      socket.emit("history", history.reverse());
     } catch (e) {
       console.error("[chat] history error:", e.message);
     }
     socket.to(roomId).emit("user:joined", { userId: user.id });
   });
 
-  // اصلاح نام event برای ارسال پیام (طبق لاگ کلاینت: message:send)
-    socket.on("message:send", async function(data) {
+  socket.on("message:send", async function(data) {
     console.log("[chat] message from " + user.id + " in " + data.roomId);
-    console.log("[chat] DATA: " + JSON.stringify(data));
     var id = crypto.randomUUID();
     var now = new Date().toISOString();
+    var msgText = data.text || data.content || "";
+    var msgType = data.type || "text";
     try {
-     await db.execute("INSERT INTO ChatMessage (id, roomId, authorId, type, text, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?)", [id, data.roomId, user.id, data.type || "text", data.text || data.content || "", now, now]);
+      await db.execute(
+        "INSERT INTO ChatMessage (id, roomId, authorId, type, text, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?)",
+        [id, data.roomId, user.id, msgType, msgText, now, now]
+      );
       console.log("[chat] saved: " + id);
     } catch (e) {
       console.error("[chat] save error:", e.message);
     }
-    // اصلاح نام event پاسخ (طبق لاگ کلاینت: message:new)io.to(data.roomId).emit("message:new", { id: id, roomId: data.roomId, author: { userId: user.id, name: "", username: "" }, text: data.text || data.content || "", type: "text", createdAt: now });
+    var msg = {
+      id: id,
+      roomId: data.roomId,
+      author: { userId: user.id, name: "", username: "" },
+      text: msgText,
+      type: msgType,
+      createdAt: now
+    };
+    io.to(data.roomId).emit("message:new", msg);
   });
 
   socket.on("room:create", async function(data) {
@@ -93,13 +128,26 @@ h.rows = h.rows.map(function(r) { return { id: r.id, roomId: r.roomId, author: {
       var roomId = "group:" + crypto.randomUUID();
       var mids = [user.id].concat(data.memberIds || []);
       var uniq = Array.from(new Set(mids));
-      await db.execute("INSERT INTO ChatRoom (id, name, kind, createdAt) VALUES (?, ?, 'group', ?)", [roomId, data.name || "New Group", new Date().toISOString()]);
+      await db.execute(
+        "INSERT INTO ChatRoom (id, name, kind, createdAt) VALUES (?, ?, 'group', ?)",
+        [roomId, data.name || "New Group", new Date().toISOString()]
+      );
       console.log("[chat] ChatRoom inserted: " + roomId);
       for (var j = 0; j < uniq.length; j++) {
-        await db.execute("INSERT OR IGNORE INTO ChatRoomMember (id, roomId, userId, joinedAt) VALUES (?, ?, ?, ?)", [crypto.randomUUID(), roomId, uniq[j], new Date().toISOString()]);
+        await db.execute(
+          "INSERT OR IGNORE INTO ChatRoomMember (id, roomId, userId, joinedAt) VALUES (?, ?, ?, ?)",
+          [crypto.randomUUID(), roomId, uniq[j], new Date().toISOString()]
+        );
         console.log("[chat] Member inserted: " + uniq[j]);
       }
-      var room = { id: roomId, name: data.name || "New Group", kind: "group", members: uniq.map(function(mid) { return { userId: mid, username: "", name: "", avatar: null, role: "" }; }) };
+      var room = {
+        id: roomId,
+        name: data.name || "New Group",
+        kind: "group",
+        members: uniq.map(function(mid) {
+          return { userId: mid, username: "", name: "", avatar: null, role: "" };
+        })
+      };
       socket.emit("room:created", { room: room });
       socket.join(roomId);
       console.log("[chat] room created: " + roomId);
