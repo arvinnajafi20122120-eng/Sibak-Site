@@ -19,9 +19,15 @@ function formatMessage(row) {
   return {
     id: row.id,
     roomId: row.roomId,
-    author: { userId: row.authorId, name: "", username: "" },
-    text: row.text || "",
+    author: {
+      userId: row.authorId,
+      username: "",
+      name: "",
+      avatar: null,
+      role: ""
+    },
     type: row.type || "text",
+    text: row.text || "",
     createdAt: row.createdAt
   };
 }
@@ -43,7 +49,6 @@ io.on("connection", async function(socket) {
   const user = socket.data.user;
   console.log("[chat] connect " + user.id);
 
-  // ارسال لیست اتاق‌ها
   try {
     var result = await db.execute(
       "SELECT r.id, r.name, r.kind, r.createdAt FROM ChatRoom r INNER JOIN ChatRoomMember m ON r.id = m.roomId WHERE m.userId = ?",
@@ -64,7 +69,7 @@ io.on("connection", async function(socket) {
         }
       } catch (e2) {}
       list.push({
-        room: { id: r.id, name: r.name, kind: r.kind, members: [], createdAt: r.createdAt },
+        room: { id: r.id, name: r.name, kind: r.kind, members: [] },
         lastMessage: lm
       });
     }
@@ -76,23 +81,20 @@ io.on("connection", async function(socket) {
 
   socket.emit("hello", { userId: user.id });
 
-  // join به اتاق
   socket.on("room:join", async function(data) {
     var roomId = typeof data === "string" ? data : (data && data.roomId ? data.roomId : "");
     if (!roomId) return;
     console.log("[chat] room:join received: " + roomId + " from " + user.id);
     socket.join(roomId);
 
-    // دریافت اطلاعات اتاق برای ارسال به کلاینت
     var roomInfo = null;
     try {
       var ri = await db.execute("SELECT id, name, kind, createdAt FROM ChatRoom WHERE id = ?", [roomId]);
       if (ri.rows.length > 0) {
-        roomInfo = { id: ri.rows[0].id, name: ri.rows[0].name, kind: ri.rows[0].kind, members: [], createdAt: ri.rows[0].createdAt };
+        roomInfo = { id: ri.rows[0].id, name: ri.rows[0].name, kind: ri.rows[0].kind, members: [] };
       }
     } catch (e) {}
 
-    // دریافت تاریخچه پیام‌ها
     var history = [];
     try {
       var h = await db.execute(
@@ -105,16 +107,14 @@ io.on("connection", async function(socket) {
       console.error("[chat] history error:", e.message);
     }
 
-    // ارسال room:joined با payload کامل (مطابق انتظار کلاینت)
     socket.emit("room:joined", {
-      room: roomInfo || { id: roomId, name: "", kind: "group", members: [], createdAt: "" },
+      room: roomInfo || { id: roomId, name: "", kind: "group", members: [] },
       history: history
     });
 
     socket.to(roomId).emit("user:joined", { userId: user.id });
   });
 
-  // ارسال پیام
   socket.on("message:send", async function(data) {
     console.log("[chat] message from " + user.id + " in " + data.roomId);
     var id = crypto.randomUUID();
@@ -141,7 +141,6 @@ io.on("connection", async function(socket) {
     io.to(data.roomId).emit("message:new", msg);
   });
 
-  // ساخت گروه
   socket.on("room:create", async function(data) {
     try {
       var roomId = "group:" + crypto.randomUUID();
