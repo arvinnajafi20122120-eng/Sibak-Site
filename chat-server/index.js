@@ -15,6 +15,17 @@ const db = createClient({
   authToken: process.env.TURSO_TOKEN,
 });
 
+function formatMessage(row) {
+  return {
+    id: row.id,
+    roomId: row.roomId,
+    author: { userId: row.authorId, name: "", username: "" },
+    text: row.text,
+    type: row.type || "text",
+    createdAt: row.createdAt
+  };
+}
+
 io.use(function(socket, next) {
   const token = socket.handshake.auth && socket.handshake.auth.token;
   if (!token) return next(new Error("Unauthorized"));
@@ -48,14 +59,7 @@ io.on("connection", async function(socket) {
           [r.id]
         );
         if (mr.rows.length > 0) {
-          lm = {
-            id: mr.rows[0].id,
-            roomId: mr.rows[0].roomId,
-            author: { userId: mr.rows[0].authorId, name: "", username: "" },
-            text: mr.rows[0].text,
-            type: mr.rows[0].type || "text",
-            createdAt: mr.rows[0].createdAt
-          };
+          lm = formatMessage(mr.rows[0]);
         }
       } catch (e2) {}
       list.push({
@@ -77,20 +81,12 @@ io.on("connection", async function(socket) {
     socket.join(roomId);
     try {
       var h = await db.execute(
-        "SELECT id, roomId, authorId, text, type, createdAt FROM ChatMessage WHERE roomId = ? ORDER BY createdAt DESC LIMIT 50",
+        "SELECT id, roomId, authorId, text, type, createdAt FROM ChatMessage WHERE roomId = ? ORDER BY createdAt ASC LIMIT 50",
         [roomId]
       );
-      var history = h.rows.map(function(r) {
-        return {
-          id: r.id,
-          roomId: r.roomId,
-          author: { userId: r.authorId, name: "", username: "" },
-          text: r.text,
-          type: r.type || "text",
-          createdAt: r.createdAt
-        };
-      });
-      socket.emit("history", history.reverse());
+      var history = h.rows.map(formatMessage);
+      console.log("[chat] emitting history with " + history.length + " messages");
+      socket.emit("history", history);
     } catch (e) {
       console.error("[chat] history error:", e.message);
     }
